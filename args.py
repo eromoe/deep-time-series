@@ -151,6 +151,7 @@ if args.use_gpu and args.use_multi_gpu:
 
 data_parser = {
     'ETTh1':{'data_path':'./data/ETT/', 'file_name':'ETTh1.csv',"dataset":"ETTh1",
+    # 'tushare': {'freq':'d', 'T':'close', 'features':'MS', },
     "freq":'h', #'seq_len':96, 'label_len':48, "pred_len":24, 
     "features":"M", 'T':'OT','M':[7,7,7],'S':[1,1,1],'MS':[7,7,1]},
     'ETTh2':{'T':'OT','M':[7,7,7],'S':[1,1,1],'MS':[7,7,1]},

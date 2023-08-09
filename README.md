@@ -36,7 +36,7 @@ pip install -r requirements.txt
 
 A simple command included three parameters correspond to the above three steps:
 ```python 
-python -u main.py --model 'autoformer' --dataset 'ETTh1' --data "ETTh1"
+python -u main.py --model autoformer --dataset ETTh1 --data ETTh1
 ```
 
 ## Usage on customized data(comming soon)

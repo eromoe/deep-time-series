@@ -1,0 +1,23 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "name": "Python: Current File",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "args" : ["${input:chooseArgs}"]
+    }
+  ],
+  "inputs": [
+    {
+      "id": "chooseArgs",
+      "type": "command",
+      "command": "extension.commandvariable.file.fileAsKey",
+      "args": {
+        "main.py": "--model 'autoformer' --dataset 'tushare' --data 'ETTh1' --data_path 'index_daily' --file_name '000001.SH' ",
+      }
+    }
+  ]
+}

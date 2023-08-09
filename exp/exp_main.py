@@ -16,7 +16,7 @@ warnings.filterwarnings('ignore')
 class Exp_model(Exp):
     def __init__(self, args, setting, params_dict):
         # for multi
-        self.fileName_lst = os.listdir(args.data_path)
+        # self.fileName_lst = os.listdir(args.data_path)
         # for single
         self.train_filename, self.val_filename, self.test_filename = \
         [args.file_name]*3 if isinstance(args.file_name, str) else args.file_name

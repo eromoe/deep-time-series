@@ -1,18 +1,36 @@
 {
-    // 使用 IntelliSense 了解相关属性。 
-    // 悬停以查看现有属性的描述。
-    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-    
         {
-            "name": "Python: 当前文件",
+            "name": "Python: main",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/main.py",
             "console": "integratedTerminal",
-            "justMyCode": false
-            
+            "args": [
+                "--model","autoformer", 
+                "--data", "tushare",
+                "--dataset","tushare", 
+                "--data_path","index_daily",
+                "--file_name","000001.SH", 
+                "--target", "close", 
+                "--freq", "d", 
+                "--features", "MS", 
+                "--enc_in", "5",
+                "--dec_in", "5",
+                "--out_size", "5",
+                "--d_model", "256",
+                "--learning_rate", "0.01"
+            ],
+            // 必须定义--data 否则会从默认参数Mydata 里取参数,导致target 等配置失效
+            // "args": [
+            //     "--model","autoformer",
+            // "--dataset","ETTh1",
+            // "--data","ETTh1"],
+            "justMyCode": true
         }
     ]
 }

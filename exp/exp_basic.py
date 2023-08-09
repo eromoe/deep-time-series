@@ -94,6 +94,14 @@ class Exp_Basic(object):
             device = torch.device('cuda:{}'.format(self.args.gpu))
             print('Use GPU: cuda:{}'.format(self.args.gpu))
         else:
+            # import sys
+            # if sys.platform == 'darwin' and torch.has_mps:
+            #     device = torch.device('mps')
+            #     print('Use MPS')
+            # else:
+            #     device = torch.device('cpu')
+            #     print('Use CPU')
+                
             device = torch.device('cpu')
             print('Use CPU')
         return device

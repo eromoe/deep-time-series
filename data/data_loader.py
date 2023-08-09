@@ -54,7 +54,7 @@ class DatasetBase(Dataset):
         val_date = date[(date>train_date.values[-1]) & (date<=f"{self.test_year-1}-12-31")][:-delta]
         test_date = date[(date>val_date.values[-1]) & (date<=f"{self.test_year}-12-31")][:-delta]
 
-        train_idxs  = date.index[np.where(date.isin(train_date))[0]];
+        train_idxs  = date.index[np.where(date.isin(train_date))[0]]
         val_idxs = date.index[np.where(date.isin(val_date))[0]]
         test_idxs = date.index[np.where(date.isin(test_date))[0]]
 
@@ -674,3 +674,83 @@ class SDWPFDataSet(DatasetBase):
     def inverse_transform(self, data):
         return self.scaler.inverse_transform(data)
 
+
+
+from data_dumper.pathbuilder import TushareDateRouter, TushareRouter
+class Dataset_Tushare(DatasetBase):
+    def __init__(self, args):
+        super().__init__(args)
+        self.__read_data__()
+        self.__read_data__()
+
+    def __read_data__(self):
+        self.scaler = StandardScaler()
+        df_raw = TushareRouter[self.data_path].read(self.file_name)
+        df_raw = df_raw[['open', 'high', 'low', 'close', 'vol']].astype(np.float32).reset_index()
+        # df_raw['target'] = df_raw.high.rolling(7).max().shift(-7).iloc[:-7]
+        
+        '''
+        df_raw.columns: ['date', ...(other features), target feature]
+        '''
+        # cols = list(df_raw.columns); 
+        if self.cols:
+            cols=self.cols.copy()
+            cols.remove(self.target)
+        else:
+            cols = list(df_raw.columns); cols.remove(self.target); cols.remove('date')
+        df_raw = df_raw[['date']+cols+[self.target]]
+
+        num_train = int(len(df_raw)*0.7)
+        num_test = int(len(df_raw)*0.2)
+        num_vali = len(df_raw) - num_train - num_test
+        border1s = [0, num_train-self.seq_len, len(df_raw)-num_test-self.seq_len]
+        border2s = [num_train, num_train+num_vali, len(df_raw)]
+        self.train_idxs = np.arange(border1s[0], border2s[0]-self.seq_len)
+        self.val_idxs = np.arange(border1s[1], border2s[1]-self.seq_len)
+        self.test_idxs = np.arange(border1s[2], border2s[2]-self.seq_len)
+        
+        if self.features=='M' or self.features=='MS':
+            cols_data = df_raw.columns[self.start_col:]
+            df_data = df_raw[cols_data]
+        elif self.features=='S':
+            df_data = df_raw[[self.target]]
+
+        if self.scale:
+            train_data = df_data[border1s[0]:border2s[0]]
+            self.scaler.fit(train_data.values)
+            data = self.scaler.transform(df_data.values)
+        else:
+            data = df_data.values
+            
+        df_stamp = df_raw[['date']]
+        df_stamp['date'] = pd.to_datetime(df_stamp.date)
+        data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
+
+        self.data_x = data
+        if self.inverse:
+            self.data_y = df_data.values
+        else:
+            self.data_y = data
+        self.data_stamp = data_stamp
+    
+    def __getitem__(self, index):
+        s_begin = index
+        s_end = s_begin + self.seq_len
+        r_begin = s_end - self.label_len 
+        r_end = r_begin + self.label_len + self.pred_len
+
+        seq_x = self.data_x[s_begin:s_end]
+        if self.inverse:
+            seq_y = np.concatenate([self.data_x[r_begin:r_begin+self.label_len], self.data_y[r_begin+self.label_len:r_end]], 0)
+        else:
+            seq_y = self.data_y[r_begin:r_end]
+        seq_x_mark = self.data_stamp[s_begin:s_end]
+        seq_y_mark = self.data_stamp[r_begin:r_end]
+
+        return dict(zip(["x", "y", "x_mark", "y_mark"],[seq_x, seq_y, seq_x_mark, seq_y_mark]))
+    
+    def __len__(self):
+        return len(self.data_x) - self.seq_len- self.pred_len + 1
+
+    def inverse_transform(self, data):
+        return self.scaler.inverse_transform(data)

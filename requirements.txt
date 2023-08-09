@@ -6,3 +6,6 @@ torch == 1.7.1
 einops == 0.4.1
 tensorboard == 2.2.2
 fastNLP == 0.5.0
+soupsieve
+bs4
+seaborn
