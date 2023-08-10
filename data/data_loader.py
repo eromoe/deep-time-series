@@ -707,7 +707,7 @@ class Dataset_Tushare(DatasetBase):
         border2s = [num_train, num_train+num_vali, len(df_raw)]
         self.train_idxs = np.arange(border1s[0], border2s[0]-self.seq_len)
         self.val_idxs = np.arange(border1s[1], border2s[1]-self.seq_len)
-        self.test_idxs = np.arange(border1s[2], border2s[2]-self.seq_len)
+        self.test_idxs = np.arange(border1s[2], border2s[2]-self.seq_len-self.pred_len+1) # 靠近结束为，要给pred_len 留出空间
         
         if self.features=='M' or self.features=='MS':
             cols_data = df_raw.columns[self.start_col:]
@@ -716,7 +716,7 @@ class Dataset_Tushare(DatasetBase):
             df_data = df_raw[[self.target]]
 
         if self.scale:
-            train_data = df_data[border1s[0]:border2s[0]]
+            train_data = df_data.iloc[self.train_idxs]
             self.scaler.fit(train_data.values)
             data = self.scaler.transform(df_data.values)
         else:
@@ -724,14 +724,13 @@ class Dataset_Tushare(DatasetBase):
             
         df_stamp = df_raw[['date']]
         df_stamp['date'] = pd.to_datetime(df_stamp.date)
-        data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
+        self.data_stamp = time_features(df_stamp, timeenc=self.timeenc, freq=self.freq)
 
         self.data_x = data
         if self.inverse:
             self.data_y = df_data.values
         else:
             self.data_y = data
-        self.data_stamp = data_stamp
     
     def __getitem__(self, index):
         s_begin = index
@@ -747,9 +746,18 @@ class Dataset_Tushare(DatasetBase):
         seq_x_mark = self.data_stamp[s_begin:s_end]
         seq_y_mark = self.data_stamp[r_begin:r_end]
 
+        assert seq_x.shape[0] == self.seq_len, f"Expected seq_x of size {self.seq_len} but got {seq_x.shape[0]}"
+        assert seq_y.shape[0] == self.label_len + self.pred_len, f"Expected seq_y of size {self.label_len + self.pred_len} but got {seq_y.shape[0]}"
+
         return dict(zip(["x", "y", "x_mark", "y_mark"],[seq_x, seq_y, seq_x_mark, seq_y_mark]))
     
     def __len__(self):
+        '''
+        __len__函数的作用是告诉DataLoader数据集有多少个样本
+        
+        因为 __getitem__ 中没有检查函数，所以某个批次中尝试获取的数据段不完整或不连续，导致这个批次的形状与其他批次不匹配。
+        最好的解决办法还是调整__len__函数，这样DataLoader不会尝试请求一个无效的索引
+        '''
         return len(self.data_x) - self.seq_len- self.pred_len + 1
 
     def inverse_transform(self, data):

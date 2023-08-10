@@ -23,14 +23,14 @@
                 "--dec_in", "5",
                 "--out_size", "5",
                 "--d_model", "256",
-                "--learning_rate", "0.01"
+                "--learning_rate", "0.01",
             ],
             // 必须定义--data 否则会从默认参数Mydata 里取参数,导致target 等配置失效
             // "args": [
             //     "--model","autoformer",
             // "--dataset","ETTh1",
             // "--data","ETTh1"],
-            "justMyCode": true
+            "justMyCode": false
         }
     ]
 }
